@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  # Nomad Agent - AI Assistant
+  nomad-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nomad-agent
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Gateway Configuration
+      - GATEWAY_PORT=8080
+      - GATEWAY_HOST=0.0.0.0
+      
+      # LLM Configuration (connect to host's Ollama)
+      - LLM_PROVIDER=ollama
+      - LLM_BASE_URL=http://host.docker.internal:11434
+      - LLM_MODEL=llama3.2
+      - LLM_TIMEOUT=120s
+      
+      # Security
+      - AUTH_MODE=jwt
+      - JWT_SECRET=${JWT_SECRET:-nomad-secret-change-me}
+      - RATE_LIMIT_REQUESTS=100
+      - RATE_LIMIT_WINDOW=1m
+      
+      # Azure DevOps (optional)
+      - AZURE_DEVOPS_PAT=${AZURE_DEVOPS_PAT:-}
+      - AZURE_DEVOPS_ORGANIZATION=${AZURE_DEVOPS_ORGANIZATION:-}
+      - AZURE_DEVOPS_PROJECT=${AZURE_DEVOPS_PROJECT:-}
+      
+      # Telegram (optional)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
+      
+      # Logging
+      - LOG_LEVEL=info
+    volumes:
+      - nomad-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - nomad-network
+
+  # Ollama - Local LLM Server (optional, use if you don't have Ollama installed)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nomad-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles:
+      - with-ollama
+    networks:
+      - nomad-network
+
+volumes:
+  nomad-data:
+    driver: local
+  ollama-models:
+    driver: local
+
+networks:
+  nomad-network:
+    driver: bridge

@@ -309,6 +309,16 @@ func (t *Tool) createWorkItem(ctx context.Context, args map[string]interface{}) 
 		Title: getString(args, "title"),
 	}
 
+	// Validate work item type using skills validator
+	if req.Type == "" {
+		return "", fmt.Errorf("work item type is required")
+	}
+	
+	// Validate title
+	if req.Title == "" {
+		return "", fmt.Errorf("work item title is required")
+	}
+
 	if desc := getString(args, "description"); desc != "" {
 		req.Description = desc
 	}

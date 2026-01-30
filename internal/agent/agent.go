@@ -10,15 +10,17 @@ import (
 	"github.com/abelclopes/nomad-iabot/internal/config"
 	"github.com/abelclopes/nomad-iabot/internal/devops"
 	"github.com/abelclopes/nomad-iabot/internal/llm"
+	"github.com/abelclopes/nomad-iabot/internal/skills"
 )
 
 // Agent is the core AI agent that processes messages and executes tools
 type Agent struct {
-	config       *config.Config
-	logger       *slog.Logger
-	llmClient    *llm.Client
-	devopsClient *devops.Client
-	devopsTool   *devops.Tool
+	config          *config.Config
+	logger          *slog.Logger
+	llmClient       *llm.Client
+	devopsClient    *devops.Client
+	devopsTool      *devops.Tool
+	skillsValidator *skills.Validator
 }
 
 // New creates a new Agent instance
@@ -26,10 +28,14 @@ func New(cfg *config.Config, logger *slog.Logger) (*Agent, error) {
 	// Create LLM client
 	llmClient := llm.NewClient(cfg.LLM.BaseURL, cfg.LLM.Model, cfg.LLM.TimeoutSec)
 
+	// Initialize skills validator
+	skillsValidator := skills.NewValidator()
+
 	agent := &Agent{
-		config:    cfg,
-		logger:    logger,
-		llmClient: llmClient,
+		config:          cfg,
+		logger:          logger,
+		llmClient:       llmClient,
+		skillsValidator: skillsValidator,
 	}
 
 	// Initialize Azure DevOps client if configured
@@ -42,6 +48,10 @@ func New(cfg *config.Config, logger *slog.Logger) (*Agent, error) {
 		)
 		agent.devopsClient = devopsClient
 		agent.devopsTool = devops.NewTool(devopsClient)
+		
+		// Register allowed DevOps commands
+		skillsValidator.RegisterCommands(skills.GetAllowedDevOpsCommands())
+		
 		logger.Info("Azure DevOps integration enabled",
 			"organization", cfg.AzureDevOps.Organization,
 			"project", cfg.AzureDevOps.Project,
@@ -59,13 +69,25 @@ func (a *Agent) ProcessMessage(ctx context.Context, userID, channel, message str
 		"message_length", len(message),
 	)
 
+	// Detect prompt injection attempts
+	if skills.DetectPromptInjection(message) {
+		a.logger.Warn("potential prompt injection detected",
+			"user_id", userID,
+			"channel", channel,
+		)
+		// Continue processing but log the attempt
+	}
+
+	// Sanitize input to prevent prompt injection
+	sanitizedMessage := skills.SanitizeInput(message)
+
 	// Build system prompt
 	systemPrompt := a.buildSystemPrompt()
 
-	// Build messages
+	// Build messages - use sanitized message
 	messages := []llm.Message{
 		{Role: "system", Content: systemPrompt},
-		{Role: "user", Content: message},
+		{Role: "user", Content: sanitizedMessage},
 	}
 
 	// Get available tools
@@ -172,6 +194,15 @@ func (a *Agent) getAvailableTools() []llm.Tool {
 // executeTool executes a tool and returns the result
 func (a *Agent) executeTool(ctx context.Context, name string, arguments string) (string, error) {
 	a.logger.Info("executing tool", "name", name)
+
+	// Validate command against skills whitelist
+	if err := a.skillsValidator.ValidateCommand(name); err != nil {
+		a.logger.Warn("command not in whitelist",
+			"command", name,
+			"error", err,
+		)
+		return "", fmt.Errorf("operation not allowed: %s", name)
+	}
 
 	// Parse arguments
 	var args map[string]interface{}

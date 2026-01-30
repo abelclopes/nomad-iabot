@@ -18,6 +18,27 @@ vendor/
 # Go workspace file
 go.work
 
+# Environment files
+.env
+.env.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
 # Environment variables
 .env
 

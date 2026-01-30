@@ -124,6 +124,12 @@ nomad-agent/
 │   ├── trello/         # Trello integration
 │   ├── gateway/        # HTTP server & handlers
 │   └── llm/            # Cliente LLM
+├── skills/             # Agent Skills - Configuração de segurança
+│   ├── README.md       # Documentação dos skills
+│   ├── azure_devops_skills.md
+│   ├── telegram_skills.md
+│   ├── webchat_skills.md
+│   └── llm_skills.md
 ├── web/
 │   └── dist/           # WebChat frontend (TODO)
 ├── Dockerfile
@@ -219,6 +225,25 @@ curl -X POST http://localhost:8080/api/v1/chat \
 - **Input Validation**: Sanitização de entrada
 - **No Shell Execution**: Ferramentas sandboxadas
 - **User Allowlist**: Controle de acesso no Telegram
+- **Agent Skills**: Configuração de segurança por integração (veja `skills/`)
+
+### Agent Skills Pattern
+
+O projeto utiliza o padrão **Agent Skills** para garantir que o agente opere apenas dentro dos limites seguros e definidos, prevenindo falhas de segurança como prompt injection.
+
+Cada integração possui um arquivo de skill que documenta:
+- ✅ Operações permitidas
+- ❌ Operações proibidas
+- 🔒 Regras de segurança
+- 📝 Exemplos de uso
+
+**Skills disponíveis:**
+- `skills/azure_devops_skills.md` - Operações do Azure DevOps
+- `skills/telegram_skills.md` - Operações do Telegram
+- `skills/webchat_skills.md` - Operações do WebChat
+- `skills/llm_skills.md` - Operações do LLM
+
+Para mais informações, consulte [skills/README.md](skills/README.md).
 
 ## 🐳 Docker
 

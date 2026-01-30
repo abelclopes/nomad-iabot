@@ -1,11 +1,12 @@
 # Nomad Agent 🤖
 
-Um assistente AI seguro e modular com foco em APIs locais e integração com Azure DevOps.
+Um assistente AI seguro e modular com foco em APIs locais e integração com Azure DevOps e Trello.
 
 ## 🚀 Funcionalidades
 
 - **LLM Local**: Suporte a Ollama, LM Studio, LocalAI, vLLM
 - **Azure DevOps**: Gerenciamento completo de Work Items, Pipelines, Repos e Boards
+- **Trello**: Gerenciamento de boards, listas e cards
 - **Multi-Canal**: WebChat e Telegram
 - **Segurança**: JWT Auth, Rate Limiting, Allowlist de usuários
 - **Docker-First**: Build otimizado ~15MB
@@ -16,6 +17,7 @@ Um assistente AI seguro e modular com foco em APIs locais e integração com Azu
 - Docker & Docker Compose
 - Ollama ou outro servidor LLM local
 - Azure DevOps PAT (opcional)
+- Trello API Key e Token (opcional)
 
 ## ⚡ Início Rápido
 
@@ -69,6 +71,10 @@ JWT_SECRET=sua-chave-secreta-aqui
 AZURE_DEVOPS_PAT=seu-pat-aqui
 AZURE_DEVOPS_ORGANIZATION=sua-org
 AZURE_DEVOPS_PROJECT=seu-projeto
+
+# Trello (opcional)
+TRELLO_API_KEY=sua-api-key-aqui
+TRELLO_TOKEN=seu-token-aqui
 ```
 
 ### 3. Execute
@@ -115,6 +121,7 @@ nomad-agent/
 │   ├── channels/       # Canais (Telegram, WebChat)
 │   ├── config/         # Configurações
 │   ├── devops/         # Azure DevOps integration
+│   ├── trello/         # Trello integration
 │   ├── gateway/        # HTTP server & handlers
 │   └── llm/            # Cliente LLM
 ├── web/
@@ -159,6 +166,19 @@ Permissões necessárias:
 - **Code**: Read
 - **Build**: Read & Execute
 - **Project and Team**: Read
+
+### Trello
+
+1. Obtenha sua API Key em: `https://trello.com/app-key`
+2. Gere um Token clicando em "Token" na mesma página
+3. Configure no `.env`:
+   ```env
+   TRELLO_API_KEY=sua-api-key
+   TRELLO_TOKEN=seu-token
+   ```
+
+Permissões do Token:
+- O token precisa ter acesso de leitura e escrita aos boards que você deseja gerenciar
 
 ### Telegram Bot
 

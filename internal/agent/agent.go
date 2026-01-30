@@ -52,7 +52,7 @@ func New(cfg *config.Config, logger *slog.Logger) (*Agent, error) {
 	}
 
 	// Initialize Trello client if configured
-	if cfg.Trello.APIKey != "" && cfg.Trello.Token != "" {
+	if cfg.Trello.Enabled && cfg.Trello.APIKey != "" && cfg.Trello.Token != "" {
 		trelloClient := trello.NewClient(cfg.Trello.APIKey, cfg.Trello.Token)
 		agent.trelloClient = trelloClient
 		agent.trelloTool = trello.NewTool(trelloClient)

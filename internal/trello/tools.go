@@ -110,7 +110,7 @@ func (t *Tool) GetToolDefinitions() []llm.Tool {
 						},
 						"position": map[string]interface{}{
 							"type":        "string",
-							"description": "Position of the card: 'top', 'bottom', or a number",
+							"description": "Position of the card: 'top' or 'bottom'",
 							"enum":        []string{"top", "bottom"},
 						},
 						"due_date": map[string]interface{}{

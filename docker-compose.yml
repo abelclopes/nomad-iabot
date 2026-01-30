@@ -15,10 +15,10 @@ services:
       - GATEWAY_PORT=8080
       - GATEWAY_HOST=0.0.0.0
       
-      # LLM Configuration (connect to host's Ollama)
+      # LLM Configuration (Ollama running locally on the same server)
       - LLM_PROVIDER=ollama
       - LLM_BASE_URL=http://host.docker.internal:11434
-      - LLM_MODEL=llama3.2
+      - LLM_MODEL=qwen3:latest
       - LLM_TIMEOUT=120s
       
       # Security

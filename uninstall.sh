@@ -55,7 +55,7 @@ stop_service() {
         fi
     fi
     
-    # Parar processos manuais
+    # Parar processos manuais com path específico
     if pgrep -f "$INSTALL_DIR/nomad" > /dev/null; then
         log_info "Parando processos em execução..."
         pkill -f "$INSTALL_DIR/nomad" || true
@@ -85,7 +85,7 @@ remove_installation_dir() {
     if [ -d "$INSTALL_DIR" ]; then
         # Fazer backup do .env se existir
         if [ -f "$INSTALL_DIR/.env" ]; then
-            BACKUP_FILE="$HOME/nomad-agent.env.backup.$(date +%Y%m%d_%H%M%S)"
+            BACKUP_FILE="$HOME/nomad-agent.env.backup.$(date +%Y%m%d_%H%M%S).$$"
             cp "$INSTALL_DIR/.env" "$BACKUP_FILE"
             log_info "Backup do .env salvo em: $BACKUP_FILE"
         fi
@@ -135,10 +135,12 @@ main() {
     echo ""
     log_info "O Nomad Agent foi removido completamente"
     
-    if [ -f "$HOME/nomad-agent.env.backup."* ]; then
+    # Check for backup files more robustly
+    BACKUP_FILES=$(ls "$HOME"/nomad-agent.env.backup.* 2>/dev/null | head -n 1)
+    if [ -n "$BACKUP_FILES" ]; then
         echo ""
         log_info "Backup da configuração salvo em:"
-        ls -1 "$HOME"/nomad-agent.env.backup.* 2>/dev/null | head -n 1
+        echo "$BACKUP_FILES"
     fi
     
     echo ""

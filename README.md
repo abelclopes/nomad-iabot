@@ -24,13 +24,14 @@ Um assistente AI seguro e modular com foco em APIs locais e integração com Azu
 Use o instalador automático que baixa, configura e instala o Nomad Agent:
 
 ```bash
-# Opção 1: Download e execução direta
-curl -fsSL https://raw.githubusercontent.com/abelclopes/nomad-iabot/main/install.sh | bash
-
-# Opção 2: Clone e execute localmente
+# Opção 1: Clone e execute localmente (mais seguro)
 git clone https://github.com/abelclopes/nomad-iabot.git
 cd nomad-iabot
 bash install.sh
+
+# Opção 2: Download e execução direta
+# ⚠️ AVISO: Revise o script antes de executar com curl | bash
+curl -fsSL https://raw.githubusercontent.com/abelclopes/nomad-iabot/main/install.sh | bash
 ```
 
 O instalador irá:

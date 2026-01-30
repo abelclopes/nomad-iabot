@@ -144,6 +144,7 @@ clone_or_update_repo() {
         if ! git diff-index --quiet HEAD -- 2>/dev/null; then
             log_warn "Alterações locais detectadas, fazendo stash..."
             git stash push -m "Auto stash antes da atualização - $(date)"
+            log_info "Para recuperar suas alterações: 'cd $INSTALL_DIR && git stash list && git stash pop'"
         fi
         
         log_info "Atualizando repositório..."
@@ -182,7 +183,13 @@ configure_env() {
     # Porta do Gateway
     read -p "Porta do Gateway (padrão: 8080): " GATEWAY_PORT
     GATEWAY_PORT=${GATEWAY_PORT:-8080}
-    sed -i.bak "s/GATEWAY_PORT=.*/GATEWAY_PORT=$GATEWAY_PORT/" "$INSTALL_DIR/.env"
+    
+    # Portable sed across Linux and macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/GATEWAY_PORT=.*/GATEWAY_PORT=$GATEWAY_PORT/" "$INSTALL_DIR/.env"
+    else
+        sed -i "s/GATEWAY_PORT=.*/GATEWAY_PORT=$GATEWAY_PORT/" "$INSTALL_DIR/.env"
+    fi
     
     # Provedor LLM
     echo ""
@@ -210,28 +217,56 @@ configure_env() {
     read -p "Modelo LLM (padrão: qwen3:latest): " LLM_MODEL
     LLM_MODEL=${LLM_MODEL:-qwen3:latest}
     
-    sed -i.bak "s|LLM_PROVIDER=.*|LLM_PROVIDER=$LLM_PROVIDER|" "$INSTALL_DIR/.env"
-    sed -i.bak "s|LLM_BASE_URL=.*|LLM_BASE_URL=$LLM_BASE_URL|" "$INSTALL_DIR/.env"
-    sed -i.bak "s|LLM_MODEL=.*|LLM_MODEL=$LLM_MODEL|" "$INSTALL_DIR/.env"
+    # Portable sed across Linux and macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|LLM_PROVIDER=.*|LLM_PROVIDER=$LLM_PROVIDER|" "$INSTALL_DIR/.env"
+        sed -i '' "s|LLM_BASE_URL=.*|LLM_BASE_URL=$LLM_BASE_URL|" "$INSTALL_DIR/.env"
+        sed -i '' "s|LLM_MODEL=.*|LLM_MODEL=$LLM_MODEL|" "$INSTALL_DIR/.env"
+    else
+        sed -i "s|LLM_PROVIDER=.*|LLM_PROVIDER=$LLM_PROVIDER|" "$INSTALL_DIR/.env"
+        sed -i "s|LLM_BASE_URL=.*|LLM_BASE_URL=$LLM_BASE_URL|" "$INSTALL_DIR/.env"
+        sed -i "s|LLM_MODEL=.*|LLM_MODEL=$LLM_MODEL|" "$INSTALL_DIR/.env"
+    fi
     
     # JWT Secret
     echo ""
     JWT_SECRET=$(openssl rand -hex 32 2>/dev/null || cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+    
+    # Validate JWT secret
+    if [ -z "$JWT_SECRET" ] || [ ${#JWT_SECRET} -lt 32 ]; then
+        log_error "Falha ao gerar JWT secret"
+        return 1
+    fi
+    
     log_info "Gerando JWT secret aleatório..."
-    sed -i.bak "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$INSTALL_DIR/.env"
+    
+    # Portable sed across Linux and macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$INSTALL_DIR/.env"
+    else
+        sed -i "s|JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" "$INSTALL_DIR/.env"
+    fi
     
     # Azure DevOps (opcional)
     echo ""
     read -p "Configurar Azure DevOps? (s/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Ss]$ ]]; then
-        read -p "Azure DevOps PAT: " AZURE_DEVOPS_PAT
+        read -s -p "Azure DevOps PAT (entrada oculta): " AZURE_DEVOPS_PAT
+        echo
         read -p "Azure DevOps Organization: " AZURE_DEVOPS_ORGANIZATION
         read -p "Azure DevOps Project: " AZURE_DEVOPS_PROJECT
         
-        sed -i.bak "s|AZURE_DEVOPS_PAT=.*|AZURE_DEVOPS_PAT=$AZURE_DEVOPS_PAT|" "$INSTALL_DIR/.env"
-        sed -i.bak "s|AZURE_DEVOPS_ORGANIZATION=.*|AZURE_DEVOPS_ORGANIZATION=$AZURE_DEVOPS_ORGANIZATION|" "$INSTALL_DIR/.env"
-        sed -i.bak "s|AZURE_DEVOPS_PROJECT=.*|AZURE_DEVOPS_PROJECT=$AZURE_DEVOPS_PROJECT|" "$INSTALL_DIR/.env"
+        # Portable sed across Linux and macOS
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|AZURE_DEVOPS_PAT=.*|AZURE_DEVOPS_PAT=$AZURE_DEVOPS_PAT|" "$INSTALL_DIR/.env"
+            sed -i '' "s|AZURE_DEVOPS_ORGANIZATION=.*|AZURE_DEVOPS_ORGANIZATION=$AZURE_DEVOPS_ORGANIZATION|" "$INSTALL_DIR/.env"
+            sed -i '' "s|AZURE_DEVOPS_PROJECT=.*|AZURE_DEVOPS_PROJECT=$AZURE_DEVOPS_PROJECT|" "$INSTALL_DIR/.env"
+        else
+            sed -i "s|AZURE_DEVOPS_PAT=.*|AZURE_DEVOPS_PAT=$AZURE_DEVOPS_PAT|" "$INSTALL_DIR/.env"
+            sed -i "s|AZURE_DEVOPS_ORGANIZATION=.*|AZURE_DEVOPS_ORGANIZATION=$AZURE_DEVOPS_ORGANIZATION|" "$INSTALL_DIR/.env"
+            sed -i "s|AZURE_DEVOPS_PROJECT=.*|AZURE_DEVOPS_PROJECT=$AZURE_DEVOPS_PROJECT|" "$INSTALL_DIR/.env"
+        fi
     fi
     
     # Telegram Bot (opcional)
@@ -239,15 +274,19 @@ configure_env() {
     read -p "Configurar Telegram Bot? (s/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Ss]$ ]]; then
-        read -p "Telegram Bot Token: " TELEGRAM_BOT_TOKEN
+        read -s -p "Telegram Bot Token (entrada oculta): " TELEGRAM_BOT_TOKEN
+        echo
         read -p "Telegram Allowed Users (separados por vírgula): " TELEGRAM_ALLOWED_USERS
         
-        sed -i.bak "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN|" "$INSTALL_DIR/.env"
-        sed -i.bak "s|TELEGRAM_ALLOWED_USERS=.*|TELEGRAM_ALLOWED_USERS=$TELEGRAM_ALLOWED_USERS|" "$INSTALL_DIR/.env"
+        # Portable sed across Linux and macOS
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN|" "$INSTALL_DIR/.env"
+            sed -i '' "s|TELEGRAM_ALLOWED_USERS=.*|TELEGRAM_ALLOWED_USERS=$TELEGRAM_ALLOWED_USERS|" "$INSTALL_DIR/.env"
+        else
+            sed -i "s|TELEGRAM_BOT_TOKEN=.*|TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN|" "$INSTALL_DIR/.env"
+            sed -i "s|TELEGRAM_ALLOWED_USERS=.*|TELEGRAM_ALLOWED_USERS=$TELEGRAM_ALLOWED_USERS|" "$INSTALL_DIR/.env"
+        fi
     fi
-    
-    # Remover arquivos de backup
-    rm -f "$INSTALL_DIR/.env.bak"
     
     log_success "Arquivo .env configurado"
 }
@@ -336,8 +375,12 @@ EOF
 #!/bin/bash
 if command -v systemctl &> /dev/null && systemctl is-active --quiet nomad-agent; then
     sudo systemctl stop nomad-agent
+elif pgrep -f "$HOME/nomad-iabot/nomad" > /dev/null; then
+    # Kill specific nomad process using full path
+    pkill -f "$HOME/nomad-iabot/nomad"
+    echo "Nomad process stopped"
 else
-    pkill -f "./nomad"
+    echo "No nomad process found"
 fi
 EOF
     chmod +x "$INSTALL_DIR/stop.sh"
@@ -360,9 +403,11 @@ verify_installation() {
         return 1
     fi
     
-    # Testar execução
-    cd "$INSTALL_DIR"
-    timeout 3 ./nomad > /dev/null 2>&1 || true
+    # Testar execução (apenas se timeout estiver disponível)
+    if command -v timeout &> /dev/null; then
+        cd "$INSTALL_DIR"
+        timeout 3 ./nomad > /dev/null 2>&1 || true
+    fi
     
     log_success "Instalação verificada"
 }

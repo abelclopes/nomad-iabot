@@ -1,11 +1,12 @@
 # Nomad Agent 🤖
 
-Um assistente AI seguro e modular com foco em APIs locais e integração com Azure DevOps.
+Um assistente AI seguro e modular com foco em APIs locais e integração com Azure DevOps e Trello.
 
 ## 🚀 Funcionalidades
 
 - **LLM Local**: Suporte a Ollama, LM Studio, LocalAI, vLLM
 - **Azure DevOps**: Gerenciamento completo de Work Items, Pipelines, Repos e Boards
+- **Trello**: Gerenciamento de boards, listas e cards
 - **Multi-Canal**: WebChat e Telegram
 - **Segurança**: JWT Auth, Rate Limiting, Allowlist de usuários
 - **Docker-First**: Build otimizado ~15MB
@@ -16,14 +17,40 @@ Um assistente AI seguro e modular com foco em APIs locais e integração com Azu
 - Docker & Docker Compose
 - Ollama ou outro servidor LLM local
 - Azure DevOps PAT (opcional)
+- Trello API Key e Token (opcional)
 
 ## ⚡ Início Rápido
+
+### Instalação Automática (Recomendado)
+
+Use o instalador automático que baixa, configura e instala o Nomad Agent:
+
+```bash
+# Opção 1: Clone e execute localmente (mais seguro)
+git clone https://github.com/abelclopes/nomad-iabot.git
+cd nomad-iabot
+bash install.sh
+
+# Opção 2: Download e execução direta
+# ⚠️ AVISO: Revise o script antes de executar com curl | bash
+curl -fsSL https://raw.githubusercontent.com/abelclopes/nomad-iabot/main/install.sh | bash
+```
+
+O instalador irá:
+- ✅ Verificar dependências (Go, Git)
+- ✅ Baixar/atualizar o repositório
+- ✅ Configurar o arquivo `.env` interativamente
+- ✅ Compilar o binário
+- ✅ Criar serviço systemd (Linux, opcional)
+- ✅ Gerar JWT secret automaticamente
+
+### Instalação Manual
 
 ### 1. Clone e Configure
 
 ```bash
-git clone https://github.com/seu-usuario/nomad-agent.git
-cd nomad-agent
+git clone https://github.com/abelclopes/nomad-iabot.git
+cd nomad-iabot
 cp .env.example .env
 ```
 
@@ -44,9 +71,22 @@ JWT_SECRET=sua-chave-secreta-aqui
 AZURE_DEVOPS_PAT=seu-pat-aqui
 AZURE_DEVOPS_ORGANIZATION=sua-org
 AZURE_DEVOPS_PROJECT=seu-projeto
+
+# Trello (opcional)
+TRELLO_API_KEY=sua-api-key-aqui
+TRELLO_TOKEN=seu-token-aqui
 ```
 
 ### 3. Execute
+
+**Instalação automática:**
+```bash
+# Se instalou via instalador automático
+sudo systemctl start nomad-agent  # Linux com systemd
+# ou
+cd $HOME/nomad-iabot
+./start.sh
+```
 
 **Com Docker:**
 ```bash
@@ -81,6 +121,7 @@ nomad-agent/
 │   ├── channels/       # Canais (Telegram, WebChat)
 │   ├── config/         # Configurações
 │   ├── devops/         # Azure DevOps integration
+│   ├── trello/         # Trello integration
 │   ├── gateway/        # HTTP server & handlers
 │   └── llm/            # Cliente LLM
 ├── skills/             # Agent Skills - Configuração de segurança
@@ -97,6 +138,21 @@ nomad-agent/
 ```
 
 ## 🔧 Configuração
+
+### Desinstalação
+
+Para desinstalar completamente o Nomad Agent:
+
+```bash
+cd $HOME/nomad-iabot
+bash uninstall.sh
+```
+
+O desinstalador irá:
+- ⛔ Parar o serviço e processos em execução
+- 🗑️ Remover o serviço systemd (se existir)
+- 📁 Remover o diretório de instalação
+- 💾 Fazer backup do arquivo `.env`
 
 ### Provedores LLM Suportados
 
@@ -116,6 +172,19 @@ Permissões necessárias:
 - **Code**: Read
 - **Build**: Read & Execute
 - **Project and Team**: Read
+
+### Trello
+
+1. Obtenha sua API Key em: `https://trello.com/app-key`
+2. Gere um Token clicando em "Token" na mesma página
+3. Configure no `.env`:
+   ```env
+   TRELLO_API_KEY=sua-api-key
+   TRELLO_TOKEN=seu-token
+   ```
+
+Permissões do Token:
+- O token precisa ter acesso de leitura e escrita aos boards que você deseja gerenciar
 
 ### Telegram Bot
 

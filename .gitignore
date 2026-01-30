@@ -39,3 +39,12 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+# Environment variables
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

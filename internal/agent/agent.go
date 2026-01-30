@@ -11,6 +11,7 @@ import (
 	"github.com/abelclopes/nomad-iabot/internal/devops"
 	"github.com/abelclopes/nomad-iabot/internal/llm"
 	"github.com/abelclopes/nomad-iabot/internal/skills"
+	"github.com/abelclopes/nomad-iabot/internal/trello"
 )
 
 // Agent is the core AI agent that processes messages and executes tools
@@ -21,6 +22,8 @@ type Agent struct {
 	devopsClient    *devops.Client
 	devopsTool      *devops.Tool
 	skillsValidator *skills.Validator
+	trelloClient *trello.Client
+	trelloTool   *trello.Tool
 }
 
 // New creates a new Agent instance
@@ -56,6 +59,14 @@ func New(cfg *config.Config, logger *slog.Logger) (*Agent, error) {
 			"organization", cfg.AzureDevOps.Organization,
 			"project", cfg.AzureDevOps.Project,
 		)
+	}
+
+	// Initialize Trello client if configured
+	if cfg.Trello.Enabled && cfg.Trello.APIKey != "" && cfg.Trello.Token != "" {
+		trelloClient := trello.NewClient(cfg.Trello.APIKey, cfg.Trello.Token)
+		agent.trelloClient = trelloClient
+		agent.trelloTool = trello.NewTool(trelloClient)
+		logger.Info("Trello integration enabled")
 	}
 
 	return agent, nil
@@ -170,6 +181,12 @@ func (a *Agent) buildSystemPrompt() string {
 		sb.WriteString(fmt.Sprintf("Projeto padrão: %s\n", a.config.AzureDevOps.Project))
 	}
 
+	if a.trelloClient != nil {
+		sb.WriteString("- Gerenciar boards, listas e cards no Trello\n")
+		sb.WriteString("\n## Trello\n")
+		sb.WriteString("Você pode criar, atualizar e consultar boards, listas e cards do Trello.\n")
+	}
+
 	sb.WriteString("\n## Diretrizes\n")
 	sb.WriteString("- Seja conciso e direto nas respostas\n")
 	sb.WriteString("- Use formatação Markdown quando apropriado\n")
@@ -186,6 +203,11 @@ func (a *Agent) getAvailableTools() []llm.Tool {
 	// Add DevOps tools if available
 	if a.devopsTool != nil {
 		tools = append(tools, a.devopsTool.GetToolDefinitions()...)
+	}
+
+	// Add Trello tools if available
+	if a.trelloTool != nil {
+		tools = append(tools, a.trelloTool.GetToolDefinitions()...)
 	}
 
 	return tools
@@ -223,6 +245,17 @@ func (a *Agent) executeTool(ctx context.Context, name string, arguments string) 
 		}
 	}
 
+	// Execute Trello tools
+	if a.trelloTool != nil {
+		result, handled, err := a.trelloTool.Execute(ctx, name, args)
+		if handled {
+			if err != nil {
+				return "", err
+			}
+			return result, nil
+		}
+	}
+
 	return "", fmt.Errorf("unknown tool: %s", name)
 }
 
@@ -234,6 +267,16 @@ func (a *Agent) GetDevOpsClient() *devops.Client {
 // GetDevOpsTool returns the Azure DevOps tool
 func (a *Agent) GetDevOpsTool() *devops.Tool {
 	return a.devopsTool
+}
+
+// GetTrelloClient returns the Trello client
+func (a *Agent) GetTrelloClient() *trello.Client {
+	return a.trelloClient
+}
+
+// GetTrelloTool returns the Trello tool
+func (a *Agent) GetTrelloTool() *trello.Tool {
+	return a.trelloTool
 }
 
 // GetLLMClient returns the LLM client

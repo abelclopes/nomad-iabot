@@ -13,6 +13,7 @@ type Config struct {
 	LLM         LLMConfig
 	Security    SecurityConfig
 	AzureDevOps AzureDevOpsConfig
+	Trello      TrelloConfig
 	Telegram    TelegramConfig
 	Tools       ToolsConfig
 }
@@ -50,6 +51,13 @@ type AzureDevOpsConfig struct {
 	Project      string
 	PAT          string // Personal Access Token
 	APIVersion   string
+}
+
+// TrelloConfig holds Trello integration settings
+type TrelloConfig struct {
+	Enabled bool
+	APIKey  string
+	Token   string
 }
 
 // TelegramConfig holds Telegram bot configuration
@@ -117,6 +125,11 @@ func Load() (*Config, error) {
 			PAT:          getEnv("AZURE_DEVOPS_PAT", ""),
 			APIVersion:   getEnv("AZURE_DEVOPS_API_VERSION", "7.0"),
 		},
+		Trello: TrelloConfig{
+			Enabled: getEnvBool("TRELLO_ENABLED", false),
+			APIKey:  getEnv("TRELLO_API_KEY", ""),
+			Token:   getEnv("TRELLO_TOKEN", ""),
+		},
 		Telegram: TelegramConfig{
 			Enabled:   getEnvBool("TELEGRAM_ENABLED", false),
 			BotToken:  getEnv("TELEGRAM_BOT_TOKEN", ""),
@@ -165,6 +178,16 @@ func (c *Config) validate() error {
 		}
 		if c.AzureDevOps.PAT == "" {
 			return fmt.Errorf("AZURE_DEVOPS_PAT is required when Azure DevOps is enabled")
+		}
+	}
+
+	// Trello validation
+	if c.Trello.Enabled {
+		if c.Trello.APIKey == "" {
+			return fmt.Errorf("TRELLO_API_KEY is required when Trello is enabled")
+		}
+		if c.Trello.Token == "" {
+			return fmt.Errorf("TRELLO_TOKEN is required when Trello is enabled")
 		}
 	}
 

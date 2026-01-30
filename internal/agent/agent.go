@@ -29,7 +29,7 @@ type Agent struct {
 // New creates a new Agent instance
 func New(cfg *config.Config, logger *slog.Logger) (*Agent, error) {
 	// Create LLM client
-	llmClient := llm.NewClient(cfg.LLM.BaseURL, cfg.LLM.Model, cfg.LLM.TimeoutSec)
+	llmClient := llm.NewClient(cfg.LLM.BaseURL, cfg.LLM.Model, cfg.LLM.APIKey, cfg.LLM.TimeoutSec)
 
 	// Initialize skills validator
 	skillsValidator := skills.NewValidator()

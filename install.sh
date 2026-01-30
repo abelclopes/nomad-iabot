@@ -371,13 +371,14 @@ EOF
     chmod +x "$INSTALL_DIR/start.sh"
     
     # Script de stop (para systemd ou processo manual)
-    cat > "$INSTALL_DIR/stop.sh" << 'EOF'
+    cat > "$INSTALL_DIR/stop.sh" << EOF
 #!/bin/bash
+INSTALL_DIR="$INSTALL_DIR"
 if command -v systemctl &> /dev/null && systemctl is-active --quiet nomad-agent; then
     sudo systemctl stop nomad-agent
-elif pgrep -f "$HOME/nomad-iabot/nomad" > /dev/null; then
+elif pgrep -f "\$INSTALL_DIR/nomad" > /dev/null; then
     # Kill specific nomad process using full path
-    pkill -f "$HOME/nomad-iabot/nomad"
+    pkill -f "\$INSTALL_DIR/nomad"
     echo "Nomad process stopped"
 else
     echo "No nomad process found"
@@ -403,10 +404,10 @@ verify_installation() {
         return 1
     fi
     
-    # Testar execução (apenas se timeout estiver disponível)
-    if command -v timeout &> /dev/null; then
-        cd "$INSTALL_DIR"
-        timeout 3 ./nomad > /dev/null 2>&1 || true
+    # Verificar que o binário pode mostrar ajuda (teste mais significativo)
+    cd "$INSTALL_DIR"
+    if ./nomad -h > /dev/null 2>&1 || ./nomad --help > /dev/null 2>&1; then
+        log_success "Binário funcional"
     fi
     
     log_success "Instalação verificada"
@@ -467,7 +468,9 @@ main() {
     
     echo ""
     log_info "Para testar a instalação:"
-    log_info "  curl http://localhost:$(grep GATEWAY_PORT $INSTALL_DIR/.env | cut -d= -f2)/health"
+    GATEWAY_PORT=$(grep "^GATEWAY_PORT=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2 | tr -d ' ')
+    GATEWAY_PORT=${GATEWAY_PORT:-8080}
+    log_info "  curl http://localhost:${GATEWAY_PORT}/health"
     echo ""
     log_info "Documentação completa: $INSTALL_DIR/README.md"
     echo ""

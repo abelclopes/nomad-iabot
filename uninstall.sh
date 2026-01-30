@@ -136,12 +136,14 @@ main() {
     log_info "O Nomad Agent foi removido completamente"
     
     # Check for backup files more robustly
-    BACKUP_FILES=$(ls "$HOME"/nomad-agent.env.backup.* 2>/dev/null | head -n 1)
-    if [ -n "$BACKUP_FILES" ]; then
-        echo ""
-        log_info "Backup da configuração salvo em:"
-        echo "$BACKUP_FILES"
-    fi
+    for backup_file in "$HOME"/nomad-agent.env.backup.* ; do
+        if [ -f "$backup_file" ]; then
+            echo ""
+            log_info "Backup da configuração salvo em:"
+            echo "$backup_file"
+            break
+        fi
+    done
     
     echo ""
 }

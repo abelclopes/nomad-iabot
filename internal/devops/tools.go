@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/abelclopes/nomad-iabot/internal/llm"
+	"github.com/abelclopes/nomad-iabot/internal/skills"
 )
 
 // Tool represents an Azure DevOps tool for the LLM
@@ -309,9 +310,14 @@ func (t *Tool) createWorkItem(ctx context.Context, args map[string]interface{}) 
 		Title: getString(args, "title"),
 	}
 
-	// Validate work item type using skills validator
+	// Validate work item type is not empty
 	if req.Type == "" {
 		return "", fmt.Errorf("work item type is required")
+	}
+	
+	// Validate work item type against allowed types
+	if !skills.ValidateDevOpsWorkItemType(req.Type) {
+		return "", fmt.Errorf("invalid work item type: %s (allowed: Task, Bug, User Story, Feature, Epic)", req.Type)
 	}
 	
 	// Validate title
@@ -326,7 +332,12 @@ func (t *Tool) createWorkItem(ctx context.Context, args map[string]interface{}) 
 		req.AssignedTo = assigned
 	}
 	if priority, ok := args["priority"].(float64); ok {
-		req.Priority = int(priority)
+		p := int(priority)
+		// Validate priority is within allowed range
+		if !skills.ValidateDevOpsPriority(p) {
+			return "", fmt.Errorf("invalid priority: %d (allowed: 1-4)", p)
+		}
+		req.Priority = p
 	}
 	if parentID, ok := args["parent_id"].(float64); ok {
 		req.ParentID = int(parentID)
@@ -358,6 +369,10 @@ func (t *Tool) updateWorkItem(ctx context.Context, args map[string]interface{}) 
 		req.Title = &title
 	}
 	if state := getString(args, "state"); state != "" {
+		// Validate state against allowed states
+		if !skills.ValidateDevOpsState(state) {
+			return "", fmt.Errorf("invalid state: %s (allowed: New, Active, Resolved, Closed)", state)
+		}
 		req.State = &state
 	}
 	if assigned := getString(args, "assigned_to"); assigned != "" {
@@ -365,6 +380,10 @@ func (t *Tool) updateWorkItem(ctx context.Context, args map[string]interface{}) 
 	}
 	if priority, ok := args["priority"].(float64); ok {
 		p := int(priority)
+		// Validate priority is within allowed range
+		if !skills.ValidateDevOpsPriority(p) {
+			return "", fmt.Errorf("invalid priority: %d (allowed: 1-4)", p)
+		}
 		req.Priority = &p
 	}
 

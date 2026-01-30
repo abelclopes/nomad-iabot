@@ -201,7 +201,7 @@ func (a *Agent) executeTool(ctx context.Context, name string, arguments string) 
 			"command", name,
 			"error", err,
 		)
-		return "", fmt.Errorf("operation not allowed: %s", name)
+		return "", fmt.Errorf("operation not permitted")
 	}
 
 	// Parse arguments

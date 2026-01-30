@@ -22,7 +22,7 @@ type Config struct {
 type GatewayConfig struct {
 	HTTPPort    int
 	WSPort      int
-	Bind        string // "loopback" or "all"
+	Bind        string // IP address to bind to (e.g., "0.0.0.0" for all interfaces, "127.0.0.1" for localhost)
 	CORSOrigins []string
 }
 
@@ -42,7 +42,7 @@ type SecurityConfig struct {
 	JWTSecret      string
 	RateLimitRPS   int    // requests per second
 	RateLimitBurst int    // burst size
-	AuthMode       string // "token", "none"
+	AuthMode       string // "jwt", "api-key", "none"
 }
 
 // AzureDevOpsConfig holds Azure DevOps integration settings

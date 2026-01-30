@@ -11,10 +11,11 @@ import (
 )
 
 // Client is a generic LLM client that supports OpenAI-compatible APIs
-// Works with: Ollama, LM Studio, LocalAI, vLLM, text-generation-webui
+// Works with: Ollama, LM Studio, LocalAI, vLLM, text-generation-webui, OpenRouter
 type Client struct {
 	baseURL    string
 	model      string
+	apiKey     string
 	httpClient *http.Client
 }
 
@@ -108,10 +109,11 @@ type StreamDelta struct {
 }
 
 // NewClient creates a new LLM client
-func NewClient(baseURL, model string, timeoutSec int) *Client {
+func NewClient(baseURL, model, apiKey string, timeoutSec int) *Client {
 	return &Client{
 		baseURL: baseURL,
 		model:   model,
+		apiKey:  apiKey,
 		httpClient: &http.Client{
 			Timeout: time.Duration(timeoutSec) * time.Second,
 		},
@@ -150,6 +152,11 @@ func (c *Client) Chat(ctx context.Context, messages []Message, opts ...ChatOptio
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
+
+	// Add Authorization header if API key is provided (for OpenRouter, OpenAI, etc.)
+	if c.apiKey != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
 
 	resp, err := c.httpClient.Do(httpReq)
 	if err != nil {

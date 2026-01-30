@@ -28,9 +28,10 @@ type GatewayConfig struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider    string // "ollama", "lmstudio", "localai"
+	Provider    string // "ollama", "lmstudio", "localai", "openrouter", "openai"
 	BaseURL     string
 	Model       string
+	APIKey      string // API Key for OpenRouter, OpenAI, etc.
 	MaxTokens   int
 	Temperature float64
 	TimeoutSec  int
@@ -108,6 +109,7 @@ func Load() (*Config, error) {
 			Provider:    getEnv("NOMAD_LLM_PROVIDER", "ollama"),
 			BaseURL:     getEnv("NOMAD_LLM_URL", "http://localhost:11434"),
 			Model:       getEnv("NOMAD_LLM_MODEL", "llama3.2"),
+			APIKey:      getEnv("NOMAD_LLM_API_KEY", ""),
 			MaxTokens:   getEnvInt("NOMAD_LLM_MAX_TOKENS", 4096),
 			Temperature: getEnvFloat("NOMAD_LLM_TEMPERATURE", 0.7),
 			TimeoutSec:  getEnvInt("NOMAD_LLM_TIMEOUT", 120),

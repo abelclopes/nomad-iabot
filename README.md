@@ -4,7 +4,7 @@ Um assistente AI seguro e modular com foco em APIs locais e integração com Azu
 
 ## 🚀 Funcionalidades
 
-- **LLM Local**: Suporte a Ollama, LM Studio, LocalAI, vLLM
+- **LLM Local e Remoto**: Suporte a Ollama, LM Studio, LocalAI, vLLM, OpenRouter
 - **Azure DevOps**: Gerenciamento completo de Work Items, Pipelines, Repos e Boards
 - **Trello**: Gerenciamento de boards, listas e cards
 - **Multi-Canal**: WebChat e Telegram
@@ -59,10 +59,16 @@ cp .env.example .env
 Edite `.env` com suas configurações:
 
 ```env
-# LLM
+# LLM Local (Ollama)
 LLM_PROVIDER=ollama
 LLM_BASE_URL=http://localhost:11434
 LLM_MODEL=llama3.2
+
+# OU LLM Remoto (OpenRouter)
+# LLM_PROVIDER=openrouter
+# LLM_BASE_URL=https://openrouter.ai/api
+# LLM_MODEL=anthropic/claude-3.5-sonnet
+# LLM_API_KEY=sua-api-key-openrouter
 
 # Segurança
 JWT_SECRET=sua-chave-secreta-aqui
@@ -158,10 +164,32 @@ O desinstalador irá:
 
 | Provedor | URL Padrão | Notas |
 |----------|------------|-------|
-| Ollama | `http://localhost:11434` | Recomendado |
+| Ollama | `http://localhost:11434` | Recomendado para uso local |
 | LM Studio | `http://localhost:1234` | OpenAI-compatible |
 | LocalAI | `http://localhost:8080` | OpenAI-compatible |
 | vLLM | `http://localhost:8000` | OpenAI-compatible |
+| OpenRouter | `https://openrouter.ai/api` | Acesso a múltiplos modelos via API, requer API key |
+
+### OpenRouter
+
+OpenRouter é um gateway unificado que oferece acesso a diversos modelos de IA através de uma única API:
+
+1. Crie uma conta em: `https://openrouter.ai`
+2. Obtenha sua API Key em: `https://openrouter.ai/keys`
+3. Configure no `.env`:
+   ```env
+   LLM_PROVIDER=openrouter
+   LLM_BASE_URL=https://openrouter.ai/api
+   LLM_MODEL=anthropic/claude-3.5-sonnet
+   LLM_API_KEY=sua-api-key-aqui
+   ```
+
+Modelos disponíveis no OpenRouter:
+- **Anthropic**: `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`
+- **OpenAI**: `openai/gpt-4`, `openai/gpt-3.5-turbo`
+- **Google**: `google/gemini-pro`
+- **Meta**: `meta-llama/llama-3-70b`
+- E muitos outros! Veja a lista completa em: `https://openrouter.ai/models`
 
 ### Azure DevOps
 

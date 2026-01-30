@@ -19,11 +19,36 @@ Um assistente AI seguro e modular com foco em APIs locais e integração com Azu
 
 ## ⚡ Início Rápido
 
+### Instalação Automática (Recomendado)
+
+Use o instalador automático que baixa, configura e instala o Nomad Agent:
+
+```bash
+# Opção 1: Clone e execute localmente (mais seguro)
+git clone https://github.com/abelclopes/nomad-iabot.git
+cd nomad-iabot
+bash install.sh
+
+# Opção 2: Download e execução direta
+# ⚠️ AVISO: Revise o script antes de executar com curl | bash
+curl -fsSL https://raw.githubusercontent.com/abelclopes/nomad-iabot/main/install.sh | bash
+```
+
+O instalador irá:
+- ✅ Verificar dependências (Go, Git)
+- ✅ Baixar/atualizar o repositório
+- ✅ Configurar o arquivo `.env` interativamente
+- ✅ Compilar o binário
+- ✅ Criar serviço systemd (Linux, opcional)
+- ✅ Gerar JWT secret automaticamente
+
+### Instalação Manual
+
 ### 1. Clone e Configure
 
 ```bash
-git clone https://github.com/seu-usuario/nomad-agent.git
-cd nomad-agent
+git clone https://github.com/abelclopes/nomad-iabot.git
+cd nomad-iabot
 cp .env.example .env
 ```
 
@@ -47,6 +72,15 @@ AZURE_DEVOPS_PROJECT=seu-projeto
 ```
 
 ### 3. Execute
+
+**Instalação automática:**
+```bash
+# Se instalou via instalador automático
+sudo systemctl start nomad-agent  # Linux com systemd
+# ou
+cd $HOME/nomad-iabot
+./start.sh
+```
 
 **Com Docker:**
 ```bash
@@ -91,6 +125,21 @@ nomad-agent/
 ```
 
 ## 🔧 Configuração
+
+### Desinstalação
+
+Para desinstalar completamente o Nomad Agent:
+
+```bash
+cd $HOME/nomad-iabot
+bash uninstall.sh
+```
+
+O desinstalador irá:
+- ⛔ Parar o serviço e processos em execução
+- 🗑️ Remover o serviço systemd (se existir)
+- 📁 Remover o diretório de instalação
+- 💾 Fazer backup do arquivo `.env`
 
 ### Provedores LLM Suportados
 
